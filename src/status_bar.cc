@@ -10,9 +10,11 @@ int main() {
   const int MAX_LENGTH = 256;
   char status[MAX_LENGTH];
   
+  DisplayHandle display;
+
   while (true) {
     snprintf(status, MAX_LENGTH, "Hello, World!");
-    SetStatus(status);
+    display.SetStatus(status);
     this_thread::sleep_for(100ms);
   }
 }
