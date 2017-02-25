@@ -9,7 +9,8 @@ opt: LDFLAGS += -s -Wl,--gc-sections
 
 # Libraries that should be linked.
 LDLIBS =  \
-	-lX11
+	-lX11  \
+	-lasound
 
 # Installation path prefix.
 INSTALL_PATH = ~/bin

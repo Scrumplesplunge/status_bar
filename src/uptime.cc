@@ -4,10 +4,10 @@
 #include <sys/sysinfo.h>
 #include <stdexcept>
 
-CalculateUptime::CalculateUptime(char* buffer, size_t size)
-    : buffer_(buffer), size_(size) {}
+CalculateUptime::CalculateUptime(Buffer* buffer, Task* on_update)
+    : buffer_(buffer), on_update_(on_update) {}
 
-void CalculateUptime::Perform(Executor*) {
+void CalculateUptime::Perform(Executor* executor) {
   struct sysinfo info;
   int error = sysinfo(&info);
   if (error != 0) throw std::runtime_error("Could not fetch sysinfo().");
@@ -27,7 +27,8 @@ void CalculateUptime::Perform(Executor*) {
   // Compute the string form.
   int i = 0;
   auto append = [&](int value, const char* suffix) {
-    i += snprintf(buffer_ + i, size_ - i, "%u%s ", value, suffix);
+    i += snprintf(buffer_->get() + i, buffer_->size() - i,
+                  "%u%s ", value, suffix);
   };
 
   if (days > 0) append(days, "d");
@@ -36,5 +37,7 @@ void CalculateUptime::Perform(Executor*) {
   if (seconds > 0 || i == 0) append(seconds, "s");
 
   // Each append finishes with a space. Remove the space.
-  buffer_[i - 1] = '\0';
+  buffer_->at(i - 1) = '\0';
+
+  executor->Schedule(on_update_);
 }

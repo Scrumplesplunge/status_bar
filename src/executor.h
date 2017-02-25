@@ -9,6 +9,8 @@ class Executor;
 // A task is an action that we would like to perform.
 class Task {
  public:
+  virtual ~Task() = default;
+
   // Perform the task. The executor which is performing the task is passed into
   // the task. This allows this task to schedule further tasks.
   virtual void Perform(Executor* executor) = 0;

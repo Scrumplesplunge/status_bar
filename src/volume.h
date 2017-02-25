@@ -1,0 +1,22 @@
+#pragma once
+
+#include "buffer.h"
+#include "executor.h"
+
+#include <alsa/asoundlib.h>
+
+class CalculateVolume : public Task {
+ public:
+  CalculateVolume(Buffer* buffer, Task* on_update);
+  ~CalculateVolume() override;
+
+  void Perform(Executor* executor) override;
+
+ private:
+  Buffer* buffer_;
+  Task* on_update_;
+
+  snd_mixer_t* mixer_handle_ = nullptr;
+  snd_mixer_selem_id_t* element_id_ = nullptr;
+  snd_mixer_elem_t* element_ = nullptr;
+};

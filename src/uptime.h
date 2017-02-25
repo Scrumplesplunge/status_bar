@@ -1,14 +1,14 @@
 #pragma once
 
+#include "buffer.h"
 #include "executor.h"
 
 class CalculateUptime : public Task {
  public:
-  CalculateUptime(char* buffer, size_t size);
-
+  CalculateUptime(Buffer* buffer, Task* on_update);
   void Perform(Executor* executor) override;
 
  private:
-  char* buffer_;
-  size_t size_;
+  Buffer* buffer_;
+  Task* on_update_;
 };

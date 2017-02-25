@@ -1,6 +1,8 @@
+#include "buffer.h"
 #include "executor.h"
 #include "set_status.h"
 #include "uptime.h"
+#include "volume.h"
 
 #include <chrono>
 #include <cstdio>
@@ -8,33 +10,43 @@
 using namespace std::chrono_literals;
 using namespace std;
 
+struct StatusBuffers {
+  FixedBuffer<32> uptime;
+  FixedBuffer<8> volume;
+};
+
 class UpdateStatus : public Task {
  public:
-  UpdateStatus(const char* uptime)
-      : uptime_(uptime) {}
+  UpdateStatus(StatusBuffers* buffers)
+      : buffers_(buffers) {}
 
   void Perform(Executor*) override {
-    const int MAX_LENGTH = 256;
-    char status[MAX_LENGTH];
-    snprintf(status, MAX_LENGTH, "[Uptime %s]", uptime_);
-    display_.SetStatus(status);
+    FixedBuffer<256> status;
+    snprintf(status.get(), status.size(),
+             "[Volume %s]  [Uptime %s]",
+             buffers_->volume.get(), buffers_->uptime.get());
+    display_.SetStatus(status.get());
   }
 
  private:
-  const char* uptime_;
+  StatusBuffers* buffers_;
+
   DisplayHandle display_;
 };
 
 int main() {
-  char uptime[32];
-  CalculateUptime calculate_uptime(uptime, 32);
-  PeriodicTask uptime_calculator(&calculate_uptime, 1s);
+  StatusBuffers buffers;
 
-  UpdateStatus update_status(uptime);
-  PeriodicTask status_updater(&update_status, 10ms);
+  UpdateStatus update_status(&buffers);
+
+  CalculateUptime calculate_uptime(&buffers.uptime, &update_status);
+  PeriodicTask uptime_calculator(&calculate_uptime, 100ms);
+
+  CalculateVolume calculate_volume(&buffers.volume, &update_status);
+  PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
   Executor executor;
-  executor.Schedule(&status_updater);
   executor.Schedule(&uptime_calculator);
+  executor.Schedule(&volume_calculator);
   executor.Run();
 }
