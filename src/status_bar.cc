@@ -49,7 +49,7 @@ int main() {
   PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
   CalculateWallTime calculate_wall_time(&buffers.wall_time, &update_status);
-  PeriodicTask wall_time_calculator(&calculate_wall_time, 250ms);
+  PeriodicTask wall_time_calculator(&calculate_wall_time, 1s);
 
   Executor executor;
   executor.Schedule(&uptime_calculator);
