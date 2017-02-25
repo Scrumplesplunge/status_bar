@@ -1,5 +1,6 @@
 #include "executor.h"
 #include "set_status.h"
+#include "uptime.h"
 
 #include <chrono>
 #include <cstdio>
@@ -9,22 +10,31 @@ using namespace std;
 
 class UpdateStatus : public Task {
  public:
+  UpdateStatus(const char* uptime)
+      : uptime_(uptime) {}
+
   void Perform(Executor*) override {
-    snprintf(status_, MAX_LENGTH, "Hello, World!");
-    display_.SetStatus(status_);
+    const int MAX_LENGTH = 256;
+    char status[MAX_LENGTH];
+    snprintf(status, MAX_LENGTH, "[Uptime %s]", uptime_);
+    display_.SetStatus(status);
   }
 
  private:
-  static const int MAX_LENGTH = 256;
-  char status_[MAX_LENGTH];
+  const char* uptime_;
   DisplayHandle display_;
 };
 
 int main() {
-  UpdateStatus update_status;
+  char uptime[32];
+  CalculateUptime calculate_uptime(uptime, 32);
+  PeriodicTask uptime_calculator(&calculate_uptime, 1s);
+
+  UpdateStatus update_status(uptime);
   PeriodicTask status_updater(&update_status, 10ms);
 
   Executor executor;
   executor.Schedule(&status_updater);
+  executor.Schedule(&uptime_calculator);
   executor.Run();
 }

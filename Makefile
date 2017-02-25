@@ -13,5 +13,6 @@ install: all
 STATUS_BAR_DEPS =  \
 	executor  \
 	set_status  \
+	uptime  \
 	status_bar
 bin/status_bar: $(patsubst %, obj/%.o, ${STATUS_BAR_DEPS})
