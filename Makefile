@@ -11,6 +11,7 @@ install: all
 	cp ${INSTALL_DEPS} ${INSTALL_PATH}
 
 STATUS_BAR_DEPS =  \
+	executor  \
 	set_status  \
 	status_bar
 bin/status_bar: $(patsubst %, obj/%.o, ${STATUS_BAR_DEPS})
