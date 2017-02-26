@@ -20,11 +20,11 @@ std::istream& operator>>(std::istream& input, Duration& duration) {
 
   // Compute the duration in milliseconds using the unit.
   if (unit == "h") {
-    duration.value = std::chrono::milliseconds(duration_number * 3600 * 1000);
+    duration.value = std::chrono::hours(duration_number);
   } else if (unit == "m") {
-    duration.value = std::chrono::milliseconds(duration_number * 60 * 1000);
+    duration.value = std::chrono::minutes(duration_number);
   } else if (unit == "s") {
-    duration.value = std::chrono::milliseconds(duration_number * 1000);
+    duration.value = std::chrono::seconds(duration_number);
   } else if (unit == "ms") {
     duration.value = std::chrono::milliseconds(duration_number);
   } else {
