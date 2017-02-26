@@ -113,7 +113,7 @@ int main() {
   Config* config = nullptr;
 
   std::unique_ptr<Config> default_config;
-  const char* system_config_file = "/etc/status_bar.conf";
+  const char* system_config_file = "/etc/status_bar.cfg";
   if (FileExists(system_config_file)) {
     default_config = std::make_unique<Config>(system_config_file, config);
     config = default_config.get();
@@ -122,7 +122,7 @@ int main() {
   std::unique_ptr<Config> user_config;
   const char* home_dir = getenv("HOME");
   if (home_dir != nullptr) {
-    auto user_config_file = std::string(home_dir) + "/.config/status_bar.conf";
+    auto user_config_file = std::string(home_dir) + "/.config/status_bar.cfg";
     if (FileExists(user_config_file.c_str())) {
       user_config = std::make_unique<Config>(user_config_file, config);
       config = user_config.get();

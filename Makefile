@@ -7,7 +7,7 @@ all: $(patsubst %, bin/%, ${BINARIES})
 
 install: all
 	cp bin/status_bar ${INSTALL_PATH}
-	cp status_bar.conf /etc/status_bar.conf
+	cp status_bar.cfg /etc/status_bar.cfg
 
 STATUS_BAR_DEPS =  \
 	buffer  \
