@@ -11,6 +11,9 @@ class Task {
  public:
   virtual ~Task() = default;
 
+ private:
+  friend class Executor;
+
   // Perform the task. The executor which is performing the task is passed into
   // the task. This allows this task to schedule further tasks.
   virtual void Perform(Executor* executor) = 0;
@@ -20,9 +23,10 @@ class Task {
 class PeriodicTask : public Task {
  public:
   PeriodicTask(Task* underlying_task, std::chrono::milliseconds delay);
-  void Perform(Executor* executor) override;
 
  private:
+  void Perform(Executor* executor) override;
+
   Task* underlying_task_;
   std::chrono::milliseconds delay_;
 };

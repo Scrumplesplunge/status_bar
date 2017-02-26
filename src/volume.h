@@ -11,9 +11,9 @@ class CalculateVolume : public Task {
   CalculateVolume(const Config& config, Buffer* buffer, Task* on_update);
   ~CalculateVolume() override;
 
+ private:
   void Perform(Executor* executor) override;
 
- private:
   Buffer* buffer_;
   Task* on_update_;
 

@@ -6,9 +6,10 @@
 class CalculateUptime : public Task {
  public:
   CalculateUptime(Buffer* buffer, Task* on_update);
-  void Perform(Executor* executor) override;
 
  private:
+  void Perform(Executor* executor) override;
+
   Buffer* buffer_;
   Task* on_update_;
 };

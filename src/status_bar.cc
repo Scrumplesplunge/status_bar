@@ -80,6 +80,7 @@ class UpdateStatus : public Task {
     }
   }
 
+ private:
   void Perform(Executor*) override {
     FixedBuffer<256> status;
     char* i = status.get();
@@ -95,7 +96,6 @@ class UpdateStatus : public Task {
     display_.SetStatus(status.get());
   }
 
- private:
   std::string format_;
   std::vector<BufferView> buffers_;
   DisplayHandle display_;

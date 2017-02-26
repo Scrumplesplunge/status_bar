@@ -7,7 +7,7 @@ PeriodicTask::PeriodicTask(
     : underlying_task_(underlying_task), delay_(delay) {}
 
 void PeriodicTask::Perform(Executor* executor) {
-  underlying_task_->Perform(executor);
+  executor->Schedule(underlying_task_);
   executor->Schedule(this, Executor::now() + delay_);
 }
 
