@@ -1,14 +1,11 @@
 #include "volume.h"
 
 CalculateVolume::CalculateVolume(
-    const Section& alsa_config, const Section& volume_config,
-    Buffer* buffer, Task* on_update)
+    const Config& config, Buffer* buffer, Task* on_update)
     : buffer_(buffer), on_update_(on_update) {
-  const std::string mixer_name = Get(alsa_config, "mixer_name");
-  const std::string controller = Get(alsa_config, "controller");
-  const std::string rounding_unit_string =
-      Get(volume_config, "rounding_unit", "1");
-  volume_rounding_unit_ = std::stoi(rounding_unit_string);
+  const std::string mixer_name = config.Get("alsa", "mixer_name");
+  const std::string controller = config.Get("alsa", "controller");
+  volume_rounding_unit_ = config.GetAs<int>("volume", "rounding_unit", 1);
 
   // Open the mixer.
   snd_mixer_open(&mixer_handle_, 0);

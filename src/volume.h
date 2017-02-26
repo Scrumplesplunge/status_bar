@@ -8,9 +8,7 @@
 
 class CalculateVolume : public Task {
  public:
-  CalculateVolume(const Section& alsa_config,
-                  const Section& volume_config,
-                  Buffer* buffer, Task* on_update);
+  CalculateVolume(const Config& config, Buffer* buffer, Task* on_update);
   ~CalculateVolume() override;
 
   void Perform(Executor* executor) override;

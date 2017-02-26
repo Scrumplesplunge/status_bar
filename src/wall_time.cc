@@ -5,9 +5,9 @@
 #include <tuple>
 
 CalculateWallTime::CalculateWallTime(
-    const Section& config, Buffer* buffer, Task* on_update)
+    const Config& config, Buffer* buffer, Task* on_update)
     : buffer_(buffer), on_update_(on_update),
-      format_(Get(config, "format", "%Y-%m-%d %A %H:%M")) {}
+      format_(config.Get("wall_time", "format", "%Y-%m-%d %A %H:%M")) {}
 
 void CalculateWallTime::Perform(Executor* executor) {
   // Get the current time.

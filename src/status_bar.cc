@@ -45,7 +45,7 @@ int main(int argc, char* args[]) {
     return 1;
   }
 
-  Config config = LoadConfig(args[1]);
+  Config config(args[1]);
 
   StatusBuffers buffers;
   UpdateStatus update_status(&buffers);
@@ -55,13 +55,12 @@ int main(int argc, char* args[]) {
   PeriodicTask uptime_calculator(&calculate_uptime, 250ms);
 
   // Audio volume.
-  CalculateVolume calculate_volume(
-      Get(config, "alsa"), Get(config, "volume"), &buffers.volume, &update_status);
+  CalculateVolume calculate_volume(config, &buffers.volume, &update_status);
   PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
   // Wall (civil) time.
   CalculateWallTime calculate_wall_time(
-      Get(config, "wall_time"), &buffers.wall_time, &update_status);
+      config, &buffers.wall_time, &update_status);
   PeriodicTask wall_time_calculator(&calculate_wall_time, 1s);
 
   Executor executor;

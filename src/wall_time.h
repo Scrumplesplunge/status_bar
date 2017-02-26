@@ -6,7 +6,7 @@
 
 class CalculateWallTime : public Task {
  public:
-  CalculateWallTime(const Section& config, Buffer* buffer, Task* on_update);
+  CalculateWallTime(const Config& config, Buffer* buffer, Task* on_update);
   void Perform(Executor* executor) override;
 
  private:
