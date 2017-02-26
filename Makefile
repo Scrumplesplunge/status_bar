@@ -5,10 +5,9 @@ BINARIES =  \
 	status_bar
 all: $(patsubst %, bin/%, ${BINARIES})
 
-INSTALL_DEPS =  \
-	bin/status_bar
 install: all
-	cp ${INSTALL_DEPS} ${INSTALL_PATH}
+	cp bin/status_bar ${INSTALL_PATH}
+	cp status_bar.conf /etc/status_bar.conf
 
 STATUS_BAR_DEPS =  \
 	buffer  \

@@ -10,7 +10,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <fstream>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -101,23 +103,41 @@ class UpdateStatus : public Task {
   DisplayHandle display_;
 };
 
-int main(int argc, char* args[]) {
-  if (argc < 2) {
-    std::cerr << "Usage: status_bar <config file>\n";
-    return 1;
+bool FileExists(const char* filename) {
+  std::ifstream file(filename);
+  return file.good();
+}
+
+int main() {
+  // This points to the last configuration we successfully loaded.
+  Config* config = nullptr;
+
+  std::unique_ptr<Config> default_config;
+  const char* system_config_file = "/etc/status_bar.conf";
+  if (FileExists(system_config_file)) {
+    default_config = std::make_unique<Config>(system_config_file, config);
+    config = default_config.get();
   }
 
-  Config config(args[1]);
+  std::unique_ptr<Config> user_config;
+  const char* home_dir = getenv("HOME");
+  if (home_dir != nullptr) {
+    auto user_config_file = std::string(home_dir) + "/.config/status_bar.conf";
+    if (FileExists(user_config_file.c_str())) {
+      user_config = std::make_unique<Config>(user_config_file, config);
+      config = user_config.get();
+    }
+  }
 
   StatusBuffers buffers;
-  UpdateStatus update_status(config, &buffers);
+  UpdateStatus update_status(*config, &buffers);
 
   // System uptime.
   CalculateUptime calculate_uptime(&buffers.uptime, &update_status);
   PeriodicTask uptime_calculator(&calculate_uptime, 250ms);
 
   // Audio volume.
-  CalculateVolume calculate_volume(config, &buffers.volume, &update_status);
+  CalculateVolume calculate_volume(*config, &buffers.volume, &update_status);
   PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
   // CPU usage.
@@ -126,7 +146,7 @@ int main(int argc, char* args[]) {
 
   // Wall (civil) time.
   CalculateWallTime calculate_wall_time(
-      config, &buffers.wall_time, &update_status);
+      *config, &buffers.wall_time, &update_status);
   PeriodicTask wall_time_calculator(&calculate_wall_time, 1s);
 
   Executor executor;

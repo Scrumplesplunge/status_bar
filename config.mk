@@ -13,4 +13,4 @@ LDLIBS =  \
 	-lasound
 
 # Installation path prefix.
-INSTALL_PATH = ~/bin
+INSTALL_PATH = /usr/bin
