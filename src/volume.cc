@@ -21,7 +21,7 @@ CalculateVolume::CalculateVolume(
 }
 
 CalculateVolume::~CalculateVolume() {
-  if (element_ != nullptr) snd_mixer_elem_free(element_);
+  // element_ is unowned.
   if (element_id_ != nullptr) snd_mixer_selem_id_free(element_id_);
   if (mixer_handle_ != nullptr) snd_mixer_close(mixer_handle_);
 }
