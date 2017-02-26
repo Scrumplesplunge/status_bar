@@ -1,8 +1,16 @@
 #pragma once
 
+#include <chrono>
+#include <iostream>
 #include <map>
 #include <stdexcept>
 #include <string>
+
+// Thin wrapper around std::chrono::milliseconds to allow string-parsing of
+// numbers with units.
+struct Duration { std::chrono::milliseconds value; };
+
+std::istream& operator>>(std::istream& input, Duration& duration);
 
 class Config {
  public:

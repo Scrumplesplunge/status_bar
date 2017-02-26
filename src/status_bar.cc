@@ -139,20 +139,30 @@ int main() {
 
   // System uptime.
   CalculateUptime calculate_uptime(&buffers.uptime, &update_status);
-  PeriodicTask uptime_calculator(&calculate_uptime, 250ms);
+  Duration uptime_update_delay =
+      config->GetAs<Duration>("uptime", "update_delay");
+  PeriodicTask uptime_calculator(&calculate_uptime, uptime_update_delay.value);
 
   // Audio volume.
   CalculateVolume calculate_volume(*config, &buffers.volume, &update_status);
-  PeriodicTask volume_calculator(&calculate_volume, 50ms);
+  Duration volume_update_delay =
+      config->GetAs<Duration>("volume", "update_delay");
+  PeriodicTask volume_calculator(&calculate_volume, volume_update_delay.value);
 
   // CPU usage.
   CalculateCpuUsage calculate_cpu_usage(&buffers.cpu_usage, &update_status);
-  PeriodicTask cpu_usage_calculator(&calculate_cpu_usage, 100ms);
+  Duration cpu_usage_update_delay =
+      config->GetAs<Duration>("cpu_usage", "update_delay");
+  PeriodicTask cpu_usage_calculator(
+      &calculate_cpu_usage, cpu_usage_update_delay.value);
 
   // Wall (civil) time.
   CalculateWallTime calculate_wall_time(
       *config, &buffers.wall_time, &update_status);
-  PeriodicTask wall_time_calculator(&calculate_wall_time, 1s);
+  Duration wall_time_update_delay =
+      config->GetAs<Duration>("wall_time", "update_delay");
+  PeriodicTask wall_time_calculator(
+      &calculate_wall_time, wall_time_update_delay.value);
 
   Executor executor;
   executor.Schedule(&uptime_calculator);

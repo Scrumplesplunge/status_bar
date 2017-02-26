@@ -12,7 +12,12 @@ T Config::GetAs(const Config::SectionName& section_name,
   std::istringstream input(variable.value);
   T output;
   input >> output;
-  if (!input.good()) throw BadValueError(section_name, variable_name, variable);
+  // Check that a value was successfully read.
+  if (input.fail()) throw BadValueError(section_name, variable_name, variable);
+  // Check that the input operation consumed the entire string.
+  char c;
+  if (input.get(c))
+    throw BadValueError(section_name, variable_name, variable);
   return output;
 }
 
@@ -28,7 +33,7 @@ T Config::GetAs(const SectionName& section_name,
   T output;
   input >> output;
   // Check that a value was successfully read.
-  if (!input.good()) throw BadValueError(section_name, variable_name, variable);
+  if (input.fail()) throw BadValueError(section_name, variable_name, variable);
   // Check that the input operation consumed the entire string.
   char c;
   if (input.get(c))

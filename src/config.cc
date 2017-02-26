@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <fstream>
 
 namespace {
@@ -10,6 +11,27 @@ bool isident(char c) { return isalpha(c) || c == '_'; }
 bool isnotident(char c) { return !isident(c); }
 
 }  // namespace
+
+std::istream& operator>>(std::istream& input, Duration& duration) {
+  int64_t duration_number;
+  std::string unit;
+  input >> duration_number >> unit;
+  if (input.fail()) return input;
+
+  // Compute the duration in milliseconds using the unit.
+  if (unit == "h") {
+    duration.value = std::chrono::milliseconds(duration_number * 3600 * 1000);
+  } else if (unit == "m") {
+    duration.value = std::chrono::milliseconds(duration_number * 60 * 1000);
+  } else if (unit == "s") {
+    duration.value = std::chrono::milliseconds(duration_number * 1000);
+  } else if (unit == "ms") {
+    duration.value = std::chrono::milliseconds(duration_number);
+  } else {
+    input.setstate(std::ios::failbit);
+  }
+  return input;
+}
 
 Config::Config(std::string filename, Config* fallback_config)
     : filename_(filename), fallback_config_(fallback_config) {
