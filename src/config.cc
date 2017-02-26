@@ -58,7 +58,7 @@ Config::Config(std::string filename, Config* fallback_config)
       // before the start of any trailing comment.
       auto comment_start = std::find(l, line.end(), '#');
       auto m = std::find_if_not(
-          std::reverse_iterator<std::string::iterator>(comment_start),
+          std::reverse_iterator<std::string::iterator>(comment_start - 1),
           line.rend(), isspace);
       std::string value(l, m.base() + 1);
       // Store the value in the config map.
