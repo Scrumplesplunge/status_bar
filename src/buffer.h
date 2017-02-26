@@ -2,29 +2,43 @@
 
 #include <cstddef>
 
-// A non-owning buffer class. The methods in this class are named to be
-// consistent with other things in the standard library.
-class Buffer {
+// A BufferView is an immutable buffer of bytes.
+class BufferView {
  public:
-  Buffer(char* buffer, size_t size);
+  BufferView(const char* buffer, size_t size);
 
   // Get raw pointers to the start of the buffer.
-  char* get();
   const char* get() const;
 
   // Access a particular char in the buffer, or throw an exception if the index
   // is out of bounds.
-  char& at(size_t index);
   char at(size_t index) const;
 
-  // Returns the size of the buffer.
   size_t size() const;
 
  private:
-  char* buffer_;
+  const char* buffer_;
   size_t size_;
 };
 
+// A Buffer is a mutable buffer of bytes.
+class Buffer : public BufferView {
+ public:
+  Buffer(char* buffer, size_t size);
+
+  using BufferView::get;
+  char* get();
+  using BufferView::at;
+  char& at(size_t index);
+
+  using BufferView::size;
+
+ private:
+  char* buffer_;
+};
+
+// A FixedBuffer is a mutable buffer of bytes which additionally owns its
+// buffer.
 template <size_t SIZE>
 class FixedBuffer : public Buffer {
  public:

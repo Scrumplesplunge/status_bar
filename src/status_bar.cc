@@ -7,9 +7,12 @@
 #include "volume.h"
 #include "wall_time.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 using namespace std::chrono_literals;
 using namespace std;
@@ -19,25 +22,82 @@ struct StatusBuffers {
   FixedBuffer<8> volume;
   FixedBuffer<32> wall_time;
   FixedBuffer<8> cpu_usage;
+
+  const Buffer& Get(const string& metric_name) {
+    if (metric_name == "uptime") return uptime;
+    if (metric_name == "volume") return volume;
+    if (metric_name == "wall_time") return wall_time;
+    if (metric_name == "cpu_usage") return cpu_usage;
+    throw std::runtime_error("Invalid metric name: " + metric_name);
+  }
 };
 
 class UpdateStatus : public Task {
  public:
-  UpdateStatus(StatusBuffers* buffers)
-      : buffers_(buffers) {}
+  static const size_t MAX_STATUS_LENGTH = 256;
+
+  UpdateStatus(const Config& config, StatusBuffers* buffers)
+      : format_(config.Get("status", "format")) {
+    const char* i = format_.data();
+    const char* end = i + format_.length();
+    while (i != end) {
+      // Seek through the input for the start of the first variable.
+      const char* j = std::find(i, end, '$');
+      buffers_.push_back(BufferView(i, j - i));
+      if (j == end) break;
+      // Handle the escape sequence starting at j.
+      if (end - j < 2)
+        throw std::runtime_error("Bad escape sequence in status string.");
+      if (j[1] == '$') {
+        // Sequence was an escaped '$'.
+        buffers_.push_back(BufferView(j, 1));
+        i = j + 2;
+      } else if (j[1] == '{') {
+        // Sequence is a variable reference.
+        const char* k = std::find(j + 1, end, '}');
+        if (k == end)
+          throw std::runtime_error("Bad escape sequence in status string.");
+        std::string metric_name(j + 2, k);
+        const Buffer& buffer = buffers->Get(metric_name);
+        buffers_.push_back(BufferView(buffer.get(), buffer.size()));
+        i = k + 1;
+      } else {
+        // Sequence is a syntax error :(
+        throw std::runtime_error("Bad escape sequence in status string.");
+      }
+    }
+    // Verify that the format string fits into the status buffer in the worst
+    // case.
+    size_t length = 0;
+    for (const BufferView& buffer : buffers_)
+      length += buffer.size();
+    if (length + 1 > MAX_STATUS_LENGTH) {
+      // Concatenation of all buffers, plus a nul-terminator, would not fit
+      // inside the status buffer.
+      throw std::runtime_error(
+          "Worst-case expansion of status string exceeds maximum supported "
+          "length.");
+    }
+  }
 
   void Perform(Executor*) override {
     FixedBuffer<256> status;
-    snprintf(status.get(), status.size(),
-             "[Volume %s] [Uptime %s] [CPU %s] [%s]",
-             buffers_->volume.get(), buffers_->uptime.get(),
-             buffers_->cpu_usage.get(), buffers_->wall_time.get());
+    char* i = status.get();
+    for (const BufferView& buffer : buffers_) {
+      // Copy bytes from this buffer into the status buffer until the first '\0'
+      // is found, or until the whole buffer has been copied.
+      const char* buffer_begin = buffer.get();
+      const char* buffer_end = buffer_begin + buffer.size();
+      size_t length = std::find(buffer_begin, buffer_end, '\0') - buffer_begin;
+      i = std::copy(buffer_begin, buffer_begin + length, i);
+    }
+    *i = '\0';
     display_.SetStatus(status.get());
   }
 
  private:
-  StatusBuffers* buffers_;
-
+  std::string format_;
+  std::vector<BufferView> buffers_;
   DisplayHandle display_;
 };
 
@@ -50,7 +110,7 @@ int main(int argc, char* args[]) {
   Config config(args[1]);
 
   StatusBuffers buffers;
-  UpdateStatus update_status(&buffers);
+  UpdateStatus update_status(config, &buffers);
 
   // System uptime.
   CalculateUptime calculate_uptime(&buffers.uptime, &update_status);
