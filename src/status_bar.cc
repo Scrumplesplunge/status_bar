@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "config.h"
+#include "cpu.h"
 #include "executor.h"
 #include "set_status.h"
 #include "uptime.h"
@@ -17,6 +18,7 @@ struct StatusBuffers {
   FixedBuffer<32> uptime;
   FixedBuffer<8> volume;
   FixedBuffer<32> wall_time;
+  FixedBuffer<8> cpu_usage;
 };
 
 class UpdateStatus : public Task {
@@ -27,9 +29,9 @@ class UpdateStatus : public Task {
   void Perform(Executor*) override {
     FixedBuffer<256> status;
     snprintf(status.get(), status.size(),
-             "[Volume %s]  [Uptime %s | %s]",
+             "[Volume %s] [Uptime %s] [CPU %s] [%s]",
              buffers_->volume.get(), buffers_->uptime.get(),
-             buffers_->wall_time.get());
+             buffers_->cpu_usage.get(), buffers_->wall_time.get());
     display_.SetStatus(status.get());
   }
 
@@ -58,6 +60,10 @@ int main(int argc, char* args[]) {
   CalculateVolume calculate_volume(config, &buffers.volume, &update_status);
   PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
+  // CPU usage.
+  CalculateCpuUsage calculate_cpu_usage(&buffers.cpu_usage, &update_status);
+  PeriodicTask cpu_usage_calculator(&calculate_cpu_usage, 100ms);
+
   // Wall (civil) time.
   CalculateWallTime calculate_wall_time(
       config, &buffers.wall_time, &update_status);
@@ -67,5 +73,6 @@ int main(int argc, char* args[]) {
   executor.Schedule(&uptime_calculator);
   executor.Schedule(&volume_calculator);
   executor.Schedule(&wall_time_calculator);
+  executor.Schedule(&cpu_usage_calculator);
   executor.Run();
 }

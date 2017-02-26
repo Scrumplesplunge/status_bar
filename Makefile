@@ -13,6 +13,7 @@ install: all
 STATUS_BAR_DEPS =  \
 	buffer  \
 	config  \
+	cpu  \
 	executor  \
 	set_status  \
 	uptime  \
