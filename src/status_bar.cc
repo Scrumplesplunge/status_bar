@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "config.h"
 #include "executor.h"
 #include "set_status.h"
 #include "uptime.h"
@@ -7,6 +8,7 @@
 
 #include <chrono>
 #include <cstdio>
+#include <iostream>
 
 using namespace std::chrono_literals;
 using namespace std;
@@ -37,18 +39,29 @@ class UpdateStatus : public Task {
   DisplayHandle display_;
 };
 
-int main() {
-  StatusBuffers buffers;
+int main(int argc, char* args[]) {
+  if (argc < 2) {
+    std::cerr << "Usage: status_bar <config file>\n";
+    return 1;
+  }
 
+  Config config = LoadConfig(args[1]);
+
+  StatusBuffers buffers;
   UpdateStatus update_status(&buffers);
 
+  // System uptime.
   CalculateUptime calculate_uptime(&buffers.uptime, &update_status);
   PeriodicTask uptime_calculator(&calculate_uptime, 250ms);
 
-  CalculateVolume calculate_volume(&buffers.volume, &update_status);
+  // Audio volume.
+  CalculateVolume calculate_volume(
+      Get(config, "alsa"), Get(config, "volume"), &buffers.volume, &update_status);
   PeriodicTask volume_calculator(&calculate_volume, 50ms);
 
-  CalculateWallTime calculate_wall_time(&buffers.wall_time, &update_status);
+  // Wall (civil) time.
+  CalculateWallTime calculate_wall_time(
+      Get(config, "wall_time"), &buffers.wall_time, &update_status);
   PeriodicTask wall_time_calculator(&calculate_wall_time, 1s);
 
   Executor executor;

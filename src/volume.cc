@@ -1,18 +1,23 @@
 #include "volume.h"
 
-const char* const MIXER_NAME = "default";
-const char* const CONTROLLER = "Master";
-
-CalculateVolume::CalculateVolume(Buffer* buffer, Task* on_update)
+CalculateVolume::CalculateVolume(
+    const Section& alsa_config, const Section& volume_config,
+    Buffer* buffer, Task* on_update)
     : buffer_(buffer), on_update_(on_update) {
+  const std::string mixer_name = Get(alsa_config, "mixer_name");
+  const std::string controller = Get(alsa_config, "controller");
+  const std::string rounding_unit_string =
+      Get(volume_config, "rounding_unit", "1");
+  volume_rounding_unit_ = std::stoi(rounding_unit_string);
+
   // Open the mixer.
   snd_mixer_open(&mixer_handle_, 0);
-  snd_mixer_attach(mixer_handle_, MIXER_NAME);
+  snd_mixer_attach(mixer_handle_, mixer_name.c_str());
   snd_mixer_selem_register(mixer_handle_, nullptr, nullptr);
   snd_mixer_load(mixer_handle_);
 
   snd_mixer_selem_id_malloc(&element_id_);
-  snd_mixer_selem_id_set_name(element_id_, CONTROLLER);
+  snd_mixer_selem_id_set_name(element_id_, controller.c_str());
 
   // Find the device element.
   element_ = snd_mixer_find_selem(mixer_handle_, element_id_);
@@ -33,8 +38,10 @@ void CalculateVolume::Perform(Executor* executor) {
   snd_mixer_selem_get_playback_volume(
       element_, SND_MIXER_SCHN_UNKNOWN, &volume);
   // Compute the volume.
-  double percent = 100.0 * volume / (max_volume - min_volume);
-  int rounded_percent = static_cast<int>(percent + 0.5);
+  double percent = 100.0 * (volume - min_volume) / (max_volume - min_volume);
+  int rounded_percent = static_cast<int>(
+                            (percent / volume_rounding_unit_) + 0.5) *
+                        volume_rounding_unit_;
   snprintf(buffer_->get(), buffer_->size(), "%d%%", rounded_percent);
 
   executor->Schedule(on_update_);
