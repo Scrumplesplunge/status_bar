@@ -129,6 +129,11 @@ int main() {
     }
   }
 
+  if (config == nullptr) {
+    std::cerr << "No configuration file was found on the system.\n";
+    return 1;
+  }
+
   StatusBuffers buffers;
   UpdateStatus update_status(*config, &buffers);
 
