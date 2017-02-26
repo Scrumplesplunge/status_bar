@@ -11,6 +11,7 @@ install: all
 	cp ${INSTALL_DEPS} ${INSTALL_PATH}
 
 STATUS_BAR_DEPS =  \
+	buffer  \
 	config  \
 	executor  \
 	set_status  \
