@@ -17,7 +17,6 @@
 #include <stdexcept>
 #include <string>
 
-using namespace std::chrono_literals;
 using namespace std;
 
 struct StatusBuffers {
@@ -120,7 +119,7 @@ int main() {
   std::unique_ptr<Config> default_config;
   const char* system_config_file = "/etc/status_bar.cfg";
   if (FileExists(system_config_file)) {
-    default_config = std::make_unique<Config>(system_config_file, config);
+    default_config.reset(new Config(system_config_file, config));
     config = default_config.get();
   }
 
@@ -129,7 +128,7 @@ int main() {
   if (home_dir != nullptr) {
     auto user_config_file = std::string(home_dir) + "/.config/status_bar.cfg";
     if (FileExists(user_config_file.c_str())) {
-      user_config = std::make_unique<Config>(user_config_file, config);
+      user_config.reset(new Config(user_config_file, config));
       config = user_config.get();
     }
   }

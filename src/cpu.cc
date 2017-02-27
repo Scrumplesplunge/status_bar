@@ -1,6 +1,7 @@
 #include "cpu.h"
 
 #include <fstream>
+#include <stdexcept>
 
 CalculateCpuUsage::CalculateCpuUsage(Buffer* buffer, Task* on_update)
     : buffer_(buffer), on_update_(on_update) {}
