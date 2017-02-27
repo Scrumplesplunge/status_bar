@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 #include <string>
 
@@ -60,6 +61,7 @@ class UpdateStatus : public Task {
         if (k == end)
           throw std::runtime_error("Bad escape sequence in status string.");
         std::string metric_name(j + 2, k);
+        variables_.insert(metric_name);
         const Buffer& buffer = buffers->Get(metric_name);
         buffers_.push_back(BufferView(buffer.get(), buffer.size()));
         i = k + 1;
@@ -82,6 +84,8 @@ class UpdateStatus : public Task {
     }
   }
 
+  const std::set<std::string> variables() const { return variables_; }
+
  private:
   void Perform(Executor*) override {
     FixedBuffer<256> status;
@@ -99,6 +103,7 @@ class UpdateStatus : public Task {
   }
 
   std::string format_;
+  std::set<std::string> variables_;
   std::vector<BufferView> buffers_;
   DisplayHandle display_;
 };
@@ -165,9 +170,10 @@ int main() {
       &calculate_wall_time, wall_time_update_delay.value);
 
   Executor executor;
-  executor.Schedule(&uptime_calculator);
-  executor.Schedule(&volume_calculator);
-  executor.Schedule(&wall_time_calculator);
-  executor.Schedule(&cpu_usage_calculator);
+  const auto& variables = update_status.variables();
+  if (variables.count("uptime")) executor.Schedule(&uptime_calculator);
+  if (variables.count("volume")) executor.Schedule(&volume_calculator);
+  if (variables.count("wall_time")) executor.Schedule(&wall_time_calculator);
+  if (variables.count("cpu_usage")) executor.Schedule(&cpu_usage_calculator);
   executor.Run();
 }
