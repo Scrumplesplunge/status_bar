@@ -1,5 +1,5 @@
 # Flags used when compiling C++.
-CXXFLAGS += -Wall -Wextra -std=c++11
+CXXFLAGS += -Wall -Wextra -pedantic -std=c++20
 opt: CXXFLAGS += -ffunction-sections -fdata-sections -flto -O3
 debug: CXXFLAGS += -O0 -g
 
