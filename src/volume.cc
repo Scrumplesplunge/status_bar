@@ -8,12 +8,16 @@ CalculateVolume::CalculateVolume(
   volume_rounding_unit_ = config.GetAs<int>("volume", "rounding_unit", 1);
 
   // Open the mixer.
-  snd_mixer_open(&mixer_handle_, 0);
-  snd_mixer_attach(mixer_handle_, mixer_name.c_str());
+  if (snd_mixer_open(&mixer_handle_, 0) < 0) return;
+  if (snd_mixer_attach(mixer_handle_, mixer_name.c_str()) < 0) {
+    snd_mixer_close(mixer_handle_);
+    mixer_handle_ = nullptr;
+    return;
+  }
   snd_mixer_selem_register(mixer_handle_, nullptr, nullptr);
   snd_mixer_load(mixer_handle_);
 
-  snd_mixer_selem_id_malloc(&element_id_);
+  if (snd_mixer_selem_id_malloc(&element_id_) < 0) return;
   snd_mixer_selem_id_set_name(element_id_, controller.c_str());
 
   // Find the device element.
@@ -27,6 +31,11 @@ CalculateVolume::~CalculateVolume() {
 }
 
 void CalculateVolume::Perform(Executor* executor) {
+  if (!mixer_handle_ || !element_) {
+    snprintf(buffer_->get(), buffer_->size(), "<?>");
+    executor->Schedule(on_update_);
+    return;
+  }
   // Fetch the current volume, and the min and max volume bounds.
   long int volume, min_volume, max_volume;
   snd_mixer_handle_events(mixer_handle_);
